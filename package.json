@@ -1,0 +1,25 @@
+{
+  "name": "gow",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Luciedgsn/GOW.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Luciedgsn/GOW/issues"
+  },
+  "homepage": "https://github.com/Luciedgsn/GOW#readme",
+  "description": "",
+  "dependencies": {
+    "@babylonjs/gui": "^7.43.0",
+    "@babylonjs/loaders": "^7.43.0",
+    "babylonjs": "^7.43.0"
+  }
+}
