@@ -1,7 +1,5 @@
 window.addEventListener('DOMContentLoaded', function() {
-
-    var canvas = this.document.getElementById('Canvas'); // Assurez-vous que l'ID est correct
-
+    var canvas = document.getElementById('renderCanvas'); 
     var engine = new BABYLON.Engine(canvas, true);
 
     var createScene = function() {
@@ -10,10 +8,15 @@ window.addEventListener('DOMContentLoaded', function() {
         camera.attachControl(canvas, true);
         var box = BABYLON.Mesh.CreateBox('boite', 2.0, scene);
         return scene;
-    }
+    };
 
     var scene = createScene();
     engine.runRenderLoop(function() {
         scene.render();
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        engine.resize();
     });
 });
