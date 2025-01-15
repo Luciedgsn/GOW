@@ -57,6 +57,19 @@ const createScene = () => {
 
     const thresholdX = 4; // Zone tampon pour déplacer la caméra horizontalement
 
+    // **Ajout du son de saut avec préchargement**
+    const jumpSound = new BABYLON.Sound(
+        "jumpSound",
+        "saut.mp3",
+        scene,
+        null,
+        {
+            autoplay: false,
+            streaming: false, // Charger complètement le son avant utilisation
+            preload: true, // Précharger le fichier audio
+        }
+    );
+
     // Fonction de gestion des clics sur l'ennemi
     const checkClickOnEnemy = (event) => {
         const pickResult = scene.pick(scene.pointerX, scene.pointerY); // Détection de la position du clic
@@ -143,41 +156,38 @@ const createScene = () => {
         }
 
         // Gestion du saut (avec la barre espace)
-        if (keyboardMap[" "]) { // Si barre espace est pressée
-            if (!isJumping && player.position.y <= 0.5) { // Démarrer le saut seulement si le joueur est au sol
+        if (keyboardMap[" "]) {
+            if (!isJumping && player.position.y <= 0.5) {
+                
+           
                 isJumping = true;
-                jumpHeight = 0; // Réinitialiser la hauteur du saut
+                jumpHeight = 0;
+
             }
         }
 
         if (isJumping) {
-            player.position.y += jumpSpeed; // Augmenter la hauteur du saut
+            player.position.y += jumpSpeed;
             jumpHeight += jumpSpeed;
 
-            // Arrêter le saut après avoir atteint la hauteur maximale
             if (jumpHeight >= jumpHeightMax) {
                 isJumping = false;
             }
         } else {
-            // Si le joueur redescend
             if (player.position.y > 0.5) {
-                player.position.y -= jumpSpeed; // Descendre
+                player.position.y -= jumpSpeed;
             } else {
-                player.position.y = 0.5; // Revenir à la hauteur du sol
+                player.position.y = 0.5;
             }
         }
 
-        // Déplacement horizontal de la caméra (gauche-droite uniquement)
         const deltaX = player.position.x - camera.position.x;
-
-        // Si la boule quitte la zone tampon sur l'axe X, ajuster la caméra
         if (Math.abs(deltaX) > thresholdX) {
             camera.position.x += (deltaX > 0 ? 1 : -1) * (Math.abs(deltaX) - thresholdX);
         }
 
-        // Garder la caméra fixée sur l'axe Y (hauteur) et Z (recul)
-        camera.position.y = 10; // Hauteur constante
-        camera.position.z = -15; // Distance constante derrière le joueur
+        camera.position.y = 10;
+        camera.position.z = -15;
     });
 
     // Gestion des événements clavier
