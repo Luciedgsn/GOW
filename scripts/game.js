@@ -9,12 +9,18 @@ const createScene = () => {
     const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
     light.intensity = 0.7;
 
-    // Joueur (Sphère) avec une couleur blanche
-    const player = BABYLON.MeshBuilder.CreateSphere("player", { diameter: 1 }, scene);
-    player.position.y = 0.5;
-    const playerMaterial = new BABYLON.StandardMaterial("playerMaterial", scene);
-    playerMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1); // Blanc
-    player.material = playerMaterial;
+    let player;
+    BABYLON.SceneLoader.ImportMesh(
+        null, 
+        "models/", // Chemin vers le dossier contenant le fichier gltf
+        "mec.gltf", // Nom du fichier gltf
+        scene, 
+        (meshes) => {
+            player = meshes[0]; // On utilise le premier mesh du modèle importé
+            player.position = new BABYLON.Vector3(0, 0, 0); // Position initiale
+            player.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5); // Ajuste l'échelle du modèle si nécessaire
+        }
+    );
 
     // Ennemi (Cube) avec une couleur rouge
     const enemy = BABYLON.MeshBuilder.CreateBox("enemy", { size: 1 }, scene);
@@ -57,18 +63,7 @@ const createScene = () => {
 
     const thresholdX = 4; // Zone tampon pour déplacer la caméra horizontalement
 
-    // **Ajout du son de saut avec préchargement**
-    const jumpSound = new BABYLON.Sound(
-        "jumpSound",
-        "saut.mp3",
-        scene,
-        null,
-        {
-            autoplay: false,
-            streaming: false, // Charger complètement le son avant utilisation
-            preload: true, // Précharger le fichier audio
-        }
-    );
+ 
 
     // Fonction de gestion des clics sur l'ennemi
     const checkClickOnEnemy = (event) => {
