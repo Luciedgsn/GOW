@@ -15,16 +15,17 @@ const createScene = () => {
         "models/", 
         "mec.gltf", 
         scene, 
+        
         (meshes) => {
-            player = meshes[0]; 
-            player.scaling = new BABYLON.Vector3(2, 2, 2); 
-            player.position = new BABYLON.Vector3(0, 1.5, 0); 
-            player.checkCollisions = true; 
-
+            player = meshes[0];
+            player.scaling = new BABYLON.Vector3(2, 2, 2);
+            player.position = new BABYLON.Vector3(0, 1.5, 0);
+            player.checkCollisions = true;
+            
             const playerMaterial = new BABYLON.StandardMaterial("playerMaterial", scene);
-            playerMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1); 
-            playerMaterial.emissiveColor = new BABYLON.Color3(1, 1, 1); 
-            playerMaterial.emissiveIntensity = 0.2; 
+            playerMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1);
+            playerMaterial.emissiveColor = new BABYLON.Color3(1, 1, 1);
+            playerMaterial.emissiveIntensity = 0.2;
             player.material = playerMaterial;
         }
     );
@@ -33,13 +34,13 @@ const createScene = () => {
     const enemy = BABYLON.MeshBuilder.CreateBox("enemy", { size: 3 }, scene);
     enemy.position.set(5, 1.5, 0);
     const enemyMaterial = new BABYLON.StandardMaterial("enemyMaterial", scene);
-    enemyMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0); 
+    enemyMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0);
     enemy.material = enemyMaterial;
 
     // Sol
-    const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 30, height: 30 }, scene);  // Taille réduite
+    const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 30, height: 30 }, scene);
     const groundMaterial = new BABYLON.StandardMaterial("groundMaterial", scene);
-    groundMaterial.diffuseColor = new BABYLON.Color3(0.5, 0.5, 0.5); 
+    groundMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
     ground.material = groundMaterial;
     ground.checkCollisions = true;
 
@@ -47,34 +48,23 @@ const createScene = () => {
     const wallHeight = 5;
     const wallThickness = 1;
 
-    // Mur avant
-    const wallFront = BABYLON.MeshBuilder.CreateBox("wallFront", { width: 30, height: wallHeight, depth: wallThickness }, scene);  // Taille réduite
-    wallFront.position = new BABYLON.Vector3(0, wallHeight / 2, 15); // Positionner à l'avant
-    const wallMaterial = new BABYLON.StandardMaterial("wallMaterial", scene);
-    wallMaterial.diffuseColor = new BABYLON.Color3(0.8, 0.8, 0.8); 
-    wallFront.material = wallMaterial;
-    wallFront.checkCollisions = true;
+    const createWall = (name, width, height, depth, position) => {
+        const wall = BABYLON.MeshBuilder.CreateBox(name, { width, height, depth }, scene);
+        wall.position = position;
+        const wallMaterial = new BABYLON.StandardMaterial("wallMaterial", scene);
+        wallMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1);
+        wall.material = wallMaterial;
+        wall.checkCollisions = true;
+        return wall;
+    };
 
-    // Mur arrière
-    const wallBack = BABYLON.MeshBuilder.CreateBox("wallBack", { width: 30, height: wallHeight, depth: wallThickness }, scene);  // Taille réduite
-    wallBack.position = new BABYLON.Vector3(0, wallHeight / 2, -15); // Positionner à l'arrière
-    wallBack.material = wallMaterial;
-    wallBack.checkCollisions = true;
-
-    // Mur gauche
-    const wallLeft = BABYLON.MeshBuilder.CreateBox("wallLeft", { width: wallThickness, height: wallHeight, depth: 30 }, scene);  // Taille réduite
-    wallLeft.position = new BABYLON.Vector3(-15, wallHeight / 2, 0); // Positionner à gauche
-    wallLeft.material = wallMaterial;
-    wallLeft.checkCollisions = true;
-
-    // Mur droit
-    const wallRight = BABYLON.MeshBuilder.CreateBox("wallRight", { width: wallThickness, height: wallHeight, depth: 30 }, scene);  // Taille réduite
-    wallRight.position = new BABYLON.Vector3(15, wallHeight / 2, 0); // Positionner à droite
-    wallRight.material = wallMaterial;
-    wallRight.checkCollisions = true;
+    createWall("wallFront", 30, wallHeight, wallThickness, new BABYLON.Vector3(0, wallHeight / 2, 15));
+    createWall("wallBack", 30, wallHeight, wallThickness, new BABYLON.Vector3(0, wallHeight / 2, -15));
+    createWall("wallLeft", wallThickness, wallHeight, 30, new BABYLON.Vector3(-15, wallHeight / 2, 0));
+    createWall("wallRight", wallThickness, wallHeight, 30, new BABYLON.Vector3(15, wallHeight / 2, 0));
 
     // Caméra
-    const camera = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 10, -20), scene);  // Ajuster la position de la caméra
+    const camera = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 10, -20), scene);
     camera.rotation.x = Math.atan(10 / 20);
     camera.attachControl(canvas, false);
 
@@ -91,45 +81,29 @@ const createScene = () => {
 
     let clickCount = 0;
 
-    // Variables pour le déplacement
-    const speed = 0.1;
-    const jumpSpeed = 0.2;
-    const jumpHeightMax = 2;
-    let isJumping = false;
-    let jumpHeight = 0;
-    const keyboardMap = {};
-
-    const thresholdX = 4;
-
     // Fonction de gestion des clics sur l'ennemi
     const checkClickOnEnemy = (event) => {
         const pickResult = scene.pick(scene.pointerX, scene.pointerY);
         if (pickResult.pickedMesh === enemy) {
             clickCount++;
-            console.log(`Clic détecté sur l'ennemi. Compteur: ${clickCount}`);
-
             const originalColor = enemy.material.diffuseColor.clone();
-            enemy.material.diffuseColor = new BABYLON.Color3(1, 1, 0); // Jaune temporaire
+            enemy.material.diffuseColor = new BABYLON.Color3(1, 1, 0);
             setTimeout(() => {
                 enemy.material.diffuseColor = originalColor;
-            }, 200); 
+            }, 200);
 
             const remainingClicks = 3 - clickCount;
             if (remainingClicks > 0) {
                 clickText.text = `Clics restants : ${remainingClicks}`;
-            }
-
-            if (clickCount >= 3) {
-                console.log("L'ennemi est tué !");
+            } else if (clickCount >= 3) {
                 clickText.text = "L'ennemi est éliminé !";
-
                 const particleSystem = new BABYLON.ParticleSystem("particles", 1000, scene);
                 particleSystem.particleTexture = new BABYLON.Texture("https://www.babylonjs-playground.com/textures/flare.png", scene);
-                particleSystem.emitter = enemy.position.clone(); 
+                particleSystem.emitter = enemy.position.clone();
                 particleSystem.minEmitBox = new BABYLON.Vector3(-0.5, -0.5, -0.5);
                 particleSystem.maxEmitBox = new BABYLON.Vector3(0.5, 0.5, 0.5);
-                particleSystem.color1 = new BABYLON.Color4(1, 0, 0, 1); 
-                particleSystem.color2 = new BABYLON.Color4(1, 1, 0, 1); 
+                particleSystem.color1 = new BABYLON.Color4(1, 0, 0, 1);
+                particleSystem.color2 = new BABYLON.Color4(1, 1, 0, 1);
                 particleSystem.minSize = 0.1;
                 particleSystem.maxSize = 0.3;
                 particleSystem.minLifeTime = 0.2;
@@ -160,8 +134,15 @@ const createScene = () => {
         }
     };
 
-    // Écouteur d'événements pour les clics
     canvas.addEventListener("click", checkClickOnEnemy);
+
+    // Gestion des événements clavier et déplacement du joueur
+    const keyboardMap = {};
+    const speed = 0.1;
+    const jumpSpeed = 0.2;
+    const jumpHeightMax = 2;
+    let isJumping = false;
+    let jumpHeight = 0;
 
     scene.onBeforeRenderObservable.add(() => {
         const moveVector = new BABYLON.Vector3(0, 0, 0);
@@ -171,51 +152,33 @@ const createScene = () => {
         if (keyboardMap["ArrowLeft"] || keyboardMap["a"]) moveVector.x = -1;
         if (keyboardMap["ArrowRight"] || keyboardMap["d"]) moveVector.x = 1;
 
-        const nextPosition = player.position.add(moveVector.scale(speed));
-
-        // Détection de collision avec les murs
-        if (nextPosition.x > -15 && nextPosition.x < 15 && nextPosition.z > -15 && nextPosition.z < 15) {
-            player.position.addInPlace(moveVector.scale(speed)); // Appliquer le mouvement si pas de collision avec les murs
-        }
-
-        if (keyboardMap[" "]) {
-            if (!isJumping && player.position.y <= 1.5) {
-                isJumping = true;
-                jumpHeight = 0;
+        if (player) {
+            const nextPosition = player.position.add(moveVector.scale(speed));
+            if (nextPosition.x > -15 && nextPosition.x < 15 && nextPosition.z > -15 && nextPosition.z < 15) {
+                player.position.addInPlace(moveVector.scale(speed));
             }
-        }
 
-        if (isJumping) {
-            player.position.y += jumpSpeed;
-            jumpHeight += jumpSpeed;
-
-            if (jumpHeight >= jumpHeightMax) {
-                isJumping = false;
+            if (keyboardMap[" "]) {
+                if (!isJumping && player.position.y <= 1.5) {
+                    isJumping = true;
+                    jumpHeight = 0;
+                }
             }
-        } else {
-            if (player.position.y > 1.5) {
+
+            if (isJumping) {
+                player.position.y += jumpSpeed;
+                jumpHeight += jumpSpeed;
+                if (jumpHeight >= jumpHeightMax) isJumping = false;
+            } else if (player.position.y > 1.5) {
                 player.position.y -= jumpSpeed;
             } else {
                 player.position.y = 1.5;
             }
         }
-
-        const deltaX = player.position.x - camera.position.x;
-        if (Math.abs(deltaX) > thresholdX) {
-            camera.position.x += (deltaX > 0 ? 1 : -1) * (Math.abs(deltaX) - thresholdX);
-        }
-
-        camera.position.y = 10;
-        camera.position.z = -20;
     });
 
-    // Gestion des événements clavier
-    window.addEventListener("keydown", (evt) => {
-        keyboardMap[evt.key] = true;
-    });
-    window.addEventListener("keyup", (evt) => {
-        keyboardMap[evt.key] = false;
-    });
+    window.addEventListener("keydown", (evt) => keyboardMap[evt.key] = true);
+    window.addEventListener("keyup", (evt) => keyboardMap[evt.key] = false);
 
     return scene;
 };
@@ -223,11 +186,7 @@ const createScene = () => {
 const scene = createScene();
 
 // Boucle de rendu
-engine.runRenderLoop(() => {
-    scene.render();
-});
+engine.runRenderLoop(() => scene.render());
 
-// Ajustement
-window.addEventListener("resize", () => {
-    engine.resize();
-});
+// Ajustement de la taille du canvas lors du redimensionnement de la fenêtre
+window.addEventListener("resize", () => engine.resize());
