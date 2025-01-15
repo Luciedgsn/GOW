@@ -31,7 +31,7 @@ const createScene = () => {
 
     // Ennemi
     const enemy = BABYLON.MeshBuilder.CreateBox("enemy", { size: 3 }, scene);
-    enemy.position.set(5, 0.5, 0);
+    enemy.position.set(5, 1.5, 0);
     const enemyMaterial = new BABYLON.StandardMaterial("enemyMaterial", scene);
     enemyMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0); 
     enemy.material = enemyMaterial;
