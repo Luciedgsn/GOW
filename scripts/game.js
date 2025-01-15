@@ -7,49 +7,76 @@ const createScene = () => {
 
     // Lumière
     const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-    light.intensity = 1.5; // Augmenter légèrement l'intensité de la lumière ambiante sans saturation excessive
+    light.intensity = 1.5;
 
     let player;
     BABYLON.SceneLoader.ImportMesh(
         null, 
-        "models/", // Chemin vers le dossier contenant le fichier gltf
-        "mec.gltf", // Nom du fichier gltf
+        "models/", 
+        "mec.gltf", 
         scene, 
         (meshes) => {
-            player = meshes[0]; // On utilise le premier mesh du modèle importé
-            player.scaling = new BABYLON.Vector3(2, 2, 2); // Agrandir le personnage
-            
-            // Réinitialisation de la position du personnage en ajustant la hauteur (1.5 pour éviter les pieds dans le sol)
-            player.position = new BABYLON.Vector3(0, 1.5, 0); // Positionner le personnage avec un offset plus élevé
-            player.checkCollisions = true; // Activer les collisions pour le personnage
+            player = meshes[0]; 
+            player.scaling = new BABYLON.Vector3(2, 2, 2); 
+            player.position = new BABYLON.Vector3(0, 1.5, 0); 
+            player.checkCollisions = true; 
 
-            // Appliquer un matériau émissif pour rendre le personnage plus lumineux, mais avec une lumière douce
             const playerMaterial = new BABYLON.StandardMaterial("playerMaterial", scene);
-            playerMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1); // Couleur diffuse blanche
-            playerMaterial.emissiveColor = new BABYLON.Color3(1, 1, 1); // Luminosité douce
-            playerMaterial.emissiveIntensity = 0.2; // Augmenter légèrement l'intensité de l'émission sans rendre trop brillant
+            playerMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1); 
+            playerMaterial.emissiveColor = new BABYLON.Color3(1, 1, 1); 
+            playerMaterial.emissiveIntensity = 0.2; 
             player.material = playerMaterial;
         }
     );
 
-    // Ennemi (Cube) avec une couleur rouge
+    // Ennemi
     const enemy = BABYLON.MeshBuilder.CreateBox("enemy", { size: 3 }, scene);
     enemy.position.set(5, 0.5, 0);
     const enemyMaterial = new BABYLON.StandardMaterial("enemyMaterial", scene);
-    enemyMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0); // Rouge
+    enemyMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0); 
     enemy.material = enemyMaterial;
 
-    // Création du sol avec des collisions activées
-    const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 100, height: 100 }, scene);
+    // Sol
+    const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 30, height: 30 }, scene);  // Taille réduite
     const groundMaterial = new BABYLON.StandardMaterial("groundMaterial", scene);
-    groundMaterial.diffuseColor = new BABYLON.Color3(0.5, 0.5, 0.5); // Couleur blanche
+    groundMaterial.diffuseColor = new BABYLON.Color3(0.5, 0.5, 0.5); 
     ground.material = groundMaterial;
-    ground.checkCollisions = true; // Activer les collisions pour le sol
+    ground.checkCollisions = true;
+
+    // Création des murs
+    const wallHeight = 5;
+    const wallThickness = 1;
+
+    // Mur avant
+    const wallFront = BABYLON.MeshBuilder.CreateBox("wallFront", { width: 30, height: wallHeight, depth: wallThickness }, scene);  // Taille réduite
+    wallFront.position = new BABYLON.Vector3(0, wallHeight / 2, 15); // Positionner à l'avant
+    const wallMaterial = new BABYLON.StandardMaterial("wallMaterial", scene);
+    wallMaterial.diffuseColor = new BABYLON.Color3(0.8, 0.8, 0.8); 
+    wallFront.material = wallMaterial;
+    wallFront.checkCollisions = true;
+
+    // Mur arrière
+    const wallBack = BABYLON.MeshBuilder.CreateBox("wallBack", { width: 30, height: wallHeight, depth: wallThickness }, scene);  // Taille réduite
+    wallBack.position = new BABYLON.Vector3(0, wallHeight / 2, -15); // Positionner à l'arrière
+    wallBack.material = wallMaterial;
+    wallBack.checkCollisions = true;
+
+    // Mur gauche
+    const wallLeft = BABYLON.MeshBuilder.CreateBox("wallLeft", { width: wallThickness, height: wallHeight, depth: 30 }, scene);  // Taille réduite
+    wallLeft.position = new BABYLON.Vector3(-15, wallHeight / 2, 0); // Positionner à gauche
+    wallLeft.material = wallMaterial;
+    wallLeft.checkCollisions = true;
+
+    // Mur droit
+    const wallRight = BABYLON.MeshBuilder.CreateBox("wallRight", { width: wallThickness, height: wallHeight, depth: 30 }, scene);  // Taille réduite
+    wallRight.position = new BABYLON.Vector3(15, wallHeight / 2, 0); // Positionner à droite
+    wallRight.material = wallMaterial;
+    wallRight.checkCollisions = true;
 
     // Caméra
-    const camera = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 10, -15), scene);
-    camera.rotation.x = Math.atan(10 / 15); // Inclinaison pour viser le terrain
-    camera.attachControl(canvas, false); // Désactiver les contrôles manuels
+    const camera = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 10, -20), scene);  // Ajuster la position de la caméra
+    camera.rotation.x = Math.atan(10 / 20);
+    camera.attachControl(canvas, false);
 
     // Interface utilisateur
     const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
@@ -62,51 +89,47 @@ const createScene = () => {
     clickText.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
     advancedTexture.addControl(clickText);
 
-    let clickCount = 0; // Compteur de clics sur l'ennemi
+    let clickCount = 0;
 
     // Variables pour le déplacement
-    const speed = 0.1; // Vitesse de déplacement
-    const jumpSpeed = 0.2; // Vitesse du saut
-    const jumpHeightMax = 2; // Hauteur maximale du saut
-    let isJumping = false; // Indicateur pour vérifier si le joueur est en train de sauter
-    let jumpHeight = 0; // Hauteur actuelle du saut
-    const keyboardMap = {}; // Dictionnaire pour les touches du clavier
+    const speed = 0.1;
+    const jumpSpeed = 0.2;
+    const jumpHeightMax = 2;
+    let isJumping = false;
+    let jumpHeight = 0;
+    const keyboardMap = {};
 
-    const thresholdX = 4; // Zone tampon pour déplacer la caméra horizontalement
+    const thresholdX = 4;
 
     // Fonction de gestion des clics sur l'ennemi
     const checkClickOnEnemy = (event) => {
-        const pickResult = scene.pick(scene.pointerX, scene.pointerY); // Détection de la position du clic
+        const pickResult = scene.pick(scene.pointerX, scene.pointerY);
         if (pickResult.pickedMesh === enemy) {
             clickCount++;
             console.log(`Clic détecté sur l'ennemi. Compteur: ${clickCount}`);
 
-            // **Changement de couleur temporaire**
             const originalColor = enemy.material.diffuseColor.clone();
             enemy.material.diffuseColor = new BABYLON.Color3(1, 1, 0); // Jaune temporaire
             setTimeout(() => {
                 enemy.material.diffuseColor = originalColor;
-            }, 200); // Revenir à la couleur rouge après 200ms
+            }, 200); 
 
-            // Mise à jour du texte
             const remainingClicks = 3 - clickCount;
             if (remainingClicks > 0) {
                 clickText.text = `Clics restants : ${remainingClicks}`;
             }
 
-            // Si le compteur de clics atteint 3, tuer l'ennemi
             if (clickCount >= 3) {
                 console.log("L'ennemi est tué !");
                 clickText.text = "L'ennemi est éliminé !";
 
-                // Effet de désintégration (particules)
                 const particleSystem = new BABYLON.ParticleSystem("particles", 1000, scene);
                 particleSystem.particleTexture = new BABYLON.Texture("https://www.babylonjs-playground.com/textures/flare.png", scene);
-                particleSystem.emitter = enemy.position.clone(); // Lancer les particules depuis l'ennemi
+                particleSystem.emitter = enemy.position.clone(); 
                 particleSystem.minEmitBox = new BABYLON.Vector3(-0.5, -0.5, -0.5);
                 particleSystem.maxEmitBox = new BABYLON.Vector3(0.5, 0.5, 0.5);
-                particleSystem.color1 = new BABYLON.Color4(1, 0, 0, 1); // Couleur rouge
-                particleSystem.color2 = new BABYLON.Color4(1, 1, 0, 1); // Couleur jaune
+                particleSystem.color1 = new BABYLON.Color4(1, 0, 0, 1); 
+                particleSystem.color2 = new BABYLON.Color4(1, 1, 0, 1); 
                 particleSystem.minSize = 0.1;
                 particleSystem.maxSize = 0.3;
                 particleSystem.minLifeTime = 0.2;
@@ -118,7 +141,6 @@ const createScene = () => {
                 particleSystem.gravity = new BABYLON.Vector3(0, -9.81, 0);
                 particleSystem.start();
 
-                // Faire disparaître le cube avec une animation
                 BABYLON.Animation.CreateAndStartAnimation(
                     "scaleDown",
                     enemy,
@@ -131,7 +153,7 @@ const createScene = () => {
                     null,
                     () => {
                         particleSystem.stop();
-                        enemy.dispose(); // Supprimer l'ennemi
+                        enemy.dispose();
                     }
                 );
             }
@@ -142,7 +164,6 @@ const createScene = () => {
     canvas.addEventListener("click", checkClickOnEnemy);
 
     scene.onBeforeRenderObservable.add(() => {
-        // Réinitialiser le vecteur de mouvement
         const moveVector = new BABYLON.Vector3(0, 0, 0);
 
         if (keyboardMap["ArrowUp"] || keyboardMap["w"]) moveVector.z = 1;
@@ -150,18 +171,15 @@ const createScene = () => {
         if (keyboardMap["ArrowLeft"] || keyboardMap["a"]) moveVector.x = -1;
         if (keyboardMap["ArrowRight"] || keyboardMap["d"]) moveVector.x = 1;
 
-        // Calculer la prochaine position du joueur
         const nextPosition = player.position.add(moveVector.scale(speed));
 
-        // Détection de collision avec l'ennemi
-        const distanceToEnemy = BABYLON.Vector3.Distance(nextPosition, enemy.position);
-        if (distanceToEnemy > 1.1) { // Si le joueur est suffisamment loin de l'ennemi
-            player.position.addInPlace(moveVector.scale(speed)); // Appliquer le mouvement
+        // Détection de collision avec les murs
+        if (nextPosition.x > -15 && nextPosition.x < 15 && nextPosition.z > -15 && nextPosition.z < 15) {
+            player.position.addInPlace(moveVector.scale(speed)); // Appliquer le mouvement si pas de collision avec les murs
         }
 
-        // Gestion du saut (avec la barre espace)
         if (keyboardMap[" "]) {
-            if (!isJumping && player.position.y <= 1.5) { // Sol atteint
+            if (!isJumping && player.position.y <= 1.5) {
                 isJumping = true;
                 jumpHeight = 0;
             }
@@ -178,7 +196,7 @@ const createScene = () => {
             if (player.position.y > 1.5) {
                 player.position.y -= jumpSpeed;
             } else {
-                player.position.y = 1.5; // Positionne le joueur sur le sol
+                player.position.y = 1.5;
             }
         }
 
@@ -188,7 +206,7 @@ const createScene = () => {
         }
 
         camera.position.y = 10;
-        camera.position.z = -15;
+        camera.position.z = -20;
     });
 
     // Gestion des événements clavier
