@@ -5,9 +5,17 @@ const engine = new BABYLON.Engine(canvas, true);
 const createScene = () => {
     const scene = new BABYLON.Scene(engine);
 
+<<<<<<< HEAD
+    scene.collisionsEnabled = true;
+
+    // Lumière
+    const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+    light.intensity = 1.5;
+=======
     // Lumière globale très faible pour assombrir la scène
     const ambientLight = new BABYLON.HemisphericLight("ambientLight", new BABYLON.Vector3(0, 1, 0), scene);
     ambientLight.intensity = 0.05;
+>>>>>>> ef30bc23b9546a01e59bdfdd0fd993bd8c858e60
 
     let player;
     BABYLON.SceneLoader.ImportMesh(
@@ -16,11 +24,27 @@ const createScene = () => {
         "mec.gltf",
         scene,
         (meshes) => {
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 597b3f2b978290865e8855015e360fe11a4b0239
             player = meshes[0];
             player.scaling = new BABYLON.Vector3(2, 2, 2);
             player.position = new BABYLON.Vector3(0, 1.5, 0);
             player.checkCollisions = true;
+<<<<<<< HEAD
+=======
+            player.ellipsoid = new BABYLON.Vector3(1, 1, 1);
+            player.ellipsoidOffset = new BABYLON.Vector3(0, 1, 0);
+            
+=======
+            player = meshes[0]; 
+            player.scaling = new BABYLON.Vector3(2, 2, 2); 
+            player.position = new BABYLON.Vector3(0, 1.5, 0); 
+            player.checkCollisions = true; 
+>>>>>>> 597b3f2b978290865e8855015e360fe11a4b0239
 
+>>>>>>> ef30bc23b9546a01e59bdfdd0fd993bd8c858e60
             const playerMaterial = new BABYLON.StandardMaterial("playerMaterial", scene);
             playerMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1);
             player.material = playerMaterial;
@@ -191,6 +215,7 @@ wallRight.checkCollisions = true;
             
         }
     };
+    
 
     // Écouteur d'événements pour les clics
     canvas.addEventListener("click", checkClickOnEnemy);
@@ -198,9 +223,9 @@ wallRight.checkCollisions = true;
     scene.onBeforeRenderObservable.add(() => {
         const moveVector = new BABYLON.Vector3(0, 0, 0);
 
-        if (keyboardMap["ArrowUp"] || keyboardMap["w"]) moveVector.z = 1;
+        if (keyboardMap["ArrowUp"] || keyboardMap["z"]) moveVector.z = 1;
         if (keyboardMap["ArrowDown"] || keyboardMap["s"]) moveVector.z = -1;
-        if (keyboardMap["ArrowLeft"] || keyboardMap["a"]) moveVector.x = -1;
+        if (keyboardMap["ArrowLeft"] || keyboardMap["q"]) moveVector.x = -1;
         if (keyboardMap["ArrowRight"] || keyboardMap["d"]) moveVector.x = 1;
 
         const nextPosition = player.position.add(moveVector.scale(speed));
