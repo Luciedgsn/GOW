@@ -5,6 +5,8 @@ const engine = new BABYLON.Engine(canvas, true);
 const createScene = () => {
     const scene = new BABYLON.Scene(engine);
 
+    scene.collisionsEnabled = true;
+
     // Lumière
     const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
     light.intensity = 1.5;
@@ -21,6 +23,8 @@ const createScene = () => {
             player.scaling = new BABYLON.Vector3(2, 2, 2);
             player.position = new BABYLON.Vector3(0, 1.5, 0);
             player.checkCollisions = true;
+            player.ellipsoid = new BABYLON.Vector3(1, 1, 1);
+            player.ellipsoidOffset = new BABYLON.Vector3(0, 1, 0);
             
             const playerMaterial = new BABYLON.StandardMaterial("playerMaterial", scene);
             playerMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1);
@@ -133,6 +137,7 @@ const createScene = () => {
             }
         }
     };
+    
 
     canvas.addEventListener("click", checkClickOnEnemy);
 
@@ -147,9 +152,9 @@ const createScene = () => {
     scene.onBeforeRenderObservable.add(() => {
         const moveVector = new BABYLON.Vector3(0, 0, 0);
 
-        if (keyboardMap["ArrowUp"] || keyboardMap["w"]) moveVector.z = 1;
+        if (keyboardMap["ArrowUp"] || keyboardMap["z"]) moveVector.z = 1;
         if (keyboardMap["ArrowDown"] || keyboardMap["s"]) moveVector.z = -1;
-        if (keyboardMap["ArrowLeft"] || keyboardMap["a"]) moveVector.x = -1;
+        if (keyboardMap["ArrowLeft"] || keyboardMap["q"]) moveVector.x = -1;
         if (keyboardMap["ArrowRight"] || keyboardMap["d"]) moveVector.x = 1;
 
         if (player) {
