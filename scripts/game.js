@@ -5,29 +5,44 @@ const engine = new BABYLON.Engine(canvas, true);
 const createScene = () => {
     const scene = new BABYLON.Scene(engine);
 
-    // Lumière
-    const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-    light.intensity = 1.5;
+    // Lumière globale très faible pour assombrir la scène
+    const ambientLight = new BABYLON.HemisphericLight("ambientLight", new BABYLON.Vector3(0, 1, 0), scene);
+    ambientLight.intensity = 0.05;
 
     let player;
     BABYLON.SceneLoader.ImportMesh(
-        null, 
-        "models/", 
-        "mec.gltf", 
-        scene, 
+        null,
+        "models/",
+        "mec.gltf",
+        scene,
         (meshes) => {
-            player = meshes[0]; 
-            player.scaling = new BABYLON.Vector3(2, 2, 2); 
-            player.position = new BABYLON.Vector3(0, 1.5, 0); 
-            player.checkCollisions = true; 
+            player = meshes[0];
+            player.scaling = new BABYLON.Vector3(2, 2, 2);
+            player.position = new BABYLON.Vector3(0, 1.5, 0);
+            player.checkCollisions = true;
 
             const playerMaterial = new BABYLON.StandardMaterial("playerMaterial", scene);
-            playerMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1); 
-            playerMaterial.emissiveColor = new BABYLON.Color3(1, 1, 1); 
-            playerMaterial.emissiveIntensity = 0.2; 
+            playerMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1);
             player.material = playerMaterial;
         }
     );
+
+    // Ajout d'une lumière ponctuelle pour simuler la lanterne
+    const lanternLight = new BABYLON.PointLight("lanternLight", new BABYLON.Vector3(0, 1.5, 0), scene);
+    lanternLight.intensity = 1; // Luminosité de la "lanterne"
+    lanternLight.range = 10; // Distance maximale d'éclairage
+    lanternLight.diffuse = new BABYLON.Color3(1, 0.85, 0.6); // Couleur chaleureuse
+
+    // Associez la lumière à la position du joueur
+    scene.onBeforeRenderObservable.add(() => {
+        if (player) {
+            lanternLight.position = player.position.clone().add(new BABYLON.Vector3(0, 1.5, 0));
+        }
+    });
+
+    // Ajout d'un effet volumétrique pour une lueur douce
+    const glowLayer = new BABYLON.GlowLayer("glow", scene);
+    glowLayer.intensity = 0.2; // Ajustez l'intensité pour l'effet souhaité
 
     // Ennemi
     const enemy = BABYLON.MeshBuilder.CreateBox("enemy", { size: 3 }, scene);
@@ -37,45 +52,49 @@ const createScene = () => {
     enemy.material = enemyMaterial;
 
     // Sol
-    const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 30, height: 30 }, scene);  // Taille réduite
+    const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 60, height: 60 }, scene);  // Taille ajustée pour la grande pièce
     const groundMaterial = new BABYLON.StandardMaterial("groundMaterial", scene);
     groundMaterial.diffuseColor = new BABYLON.Color3(0.5, 0.5, 0.5); 
     ground.material = groundMaterial;
     ground.checkCollisions = true;
 
-    // Création des murs
-    const wallHeight = 5;
-    const wallThickness = 1;
+// Hauteur des murs
+const wallHeight = 10;  // Hauteur des murs
+const wallThickness = 1;
+const taillePiece = 60;  // Taille de la pièce
 
-    // Mur avant
-    const wallFront = BABYLON.MeshBuilder.CreateBox("wallFront", { width: 30, height: wallHeight, depth: wallThickness }, scene);  // Taille réduite
-    wallFront.position = new BABYLON.Vector3(0, wallHeight / 2, 15); // Positionner à l'avant
-    const wallMaterial = new BABYLON.StandardMaterial("wallMaterial", scene);
-    wallMaterial.diffuseColor = new BABYLON.Color3(0.8, 0.8, 0.8); 
-    wallFront.material = wallMaterial;
-    wallFront.checkCollisions = true;
+// Création du matériau gris pour les murs
+const wallMaterial = new BABYLON.StandardMaterial("wallMaterial", scene);
+wallMaterial.diffuseColor = new BABYLON.Color3(0.5, 0.5, 0.5);  // Gris pour les murs
 
-    // Mur arrière
-    const wallBack = BABYLON.MeshBuilder.CreateBox("wallBack", { width: 30, height: wallHeight, depth: wallThickness }, scene);  // Taille réduite
-    wallBack.position = new BABYLON.Vector3(0, wallHeight / 2, -15); // Positionner à l'arrière
-    wallBack.material = wallMaterial;
-    wallBack.checkCollisions = true;
+// Mur avant
+const wallFront = BABYLON.MeshBuilder.CreateBox("wallFront", { width: taillePiece, height: wallHeight, depth: wallThickness }, scene);
+wallFront.position = new BABYLON.Vector3(0, wallHeight / 2, taillePiece / 2); // Positionner à l'avant
+wallFront.material = wallMaterial;
+wallFront.checkCollisions = true;
 
-    // Mur gauche
-    const wallLeft = BABYLON.MeshBuilder.CreateBox("wallLeft", { width: wallThickness, height: wallHeight, depth: 30 }, scene);  // Taille réduite
-    wallLeft.position = new BABYLON.Vector3(-15, wallHeight / 2, 0); // Positionner à gauche
-    wallLeft.material = wallMaterial;
-    wallLeft.checkCollisions = true;
+// Mur arrière
+const wallBack = BABYLON.MeshBuilder.CreateBox("wallBack", { width: taillePiece, height: wallHeight, depth: wallThickness }, scene);  
+wallBack.position = new BABYLON.Vector3(0, wallHeight / 2, -taillePiece / 2); // Positionner à l'arrière
+wallBack.material = wallMaterial;
+wallBack.checkCollisions = true;
 
-    // Mur droit
-    const wallRight = BABYLON.MeshBuilder.CreateBox("wallRight", { width: wallThickness, height: wallHeight, depth: 30 }, scene);  // Taille réduite
-    wallRight.position = new BABYLON.Vector3(15, wallHeight / 2, 0); // Positionner à droite
-    wallRight.material = wallMaterial;
-    wallRight.checkCollisions = true;
+// Mur gauche
+const wallLeft = BABYLON.MeshBuilder.CreateBox("wallLeft", { width: wallThickness, height: wallHeight, depth: taillePiece }, scene);
+wallLeft.position = new BABYLON.Vector3(-taillePiece / 2, wallHeight / 2, 0); // Positionner à gauche
+wallLeft.material = wallMaterial;
+wallLeft.checkCollisions = true;
+
+// Mur droit
+const wallRight = BABYLON.MeshBuilder.CreateBox("wallRight", { width: wallThickness, height: wallHeight, depth: taillePiece }, scene);
+wallRight.position = new BABYLON.Vector3(taillePiece / 2, wallHeight / 2, 0); // Positionner à droite
+wallRight.material = wallMaterial;
+wallRight.checkCollisions = true;
+
 
     // Caméra
-    const camera = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 10, -20), scene);  // Ajuster la position de la caméra
-    camera.rotation.x = Math.atan(10 / 20);
+    const camera = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 10, -30), scene);  // Ajuster la position de la caméra
+    camera.rotation.x = Math.atan(10 / 30);
     camera.attachControl(canvas, false);
 
     // Interface utilisateur
@@ -122,7 +141,19 @@ const createScene = () => {
             if (clickCount >= 3) {
                 console.log("L'ennemi est tué !");
                 clickText.text = "L'ennemi est éliminé !";
-
+            
+                // Effet d'augmentation de la luminosité
+                BABYLON.Animation.CreateAndStartAnimation(
+                    "lightIntensityIncrease",
+                    ambientLight,
+                    "intensity",
+                    30, // FPS
+                    60, // Nombre de frames
+                    ambientLight.intensity,
+                    1.0, // Intensité finale
+                    BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+                );
+            
                 const particleSystem = new BABYLON.ParticleSystem("particles", 1000, scene);
                 particleSystem.particleTexture = new BABYLON.Texture("https://www.babylonjs-playground.com/textures/flare.png", scene);
                 particleSystem.emitter = enemy.position.clone(); 
@@ -140,7 +171,7 @@ const createScene = () => {
                 particleSystem.direction2 = new BABYLON.Vector3(1, 1, 1);
                 particleSystem.gravity = new BABYLON.Vector3(0, -9.81, 0);
                 particleSystem.start();
-
+            
                 BABYLON.Animation.CreateAndStartAnimation(
                     "scaleDown",
                     enemy,
@@ -157,6 +188,7 @@ const createScene = () => {
                     }
                 );
             }
+            
         }
     };
 
@@ -174,7 +206,7 @@ const createScene = () => {
         const nextPosition = player.position.add(moveVector.scale(speed));
 
         // Détection de collision avec les murs
-        if (nextPosition.x > -15 && nextPosition.x < 15 && nextPosition.z > -15 && nextPosition.z < 15) {
+        if (nextPosition.x > -taillePiece / 2 && nextPosition.x < taillePiece / 2 && nextPosition.z > -taillePiece / 2 && nextPosition.z < taillePiece / 2) {
             player.position.addInPlace(moveVector.scale(speed)); // Appliquer le mouvement si pas de collision avec les murs
         }
 
@@ -206,7 +238,7 @@ const createScene = () => {
         }
 
         camera.position.y = 10;
-        camera.position.z = -20;
+        camera.position.z = -30;
     });
 
     // Gestion des événements clavier
@@ -221,6 +253,7 @@ const createScene = () => {
 };
 
 const scene = createScene();
+scene.clearColor = new BABYLON.Color4(0, 0, 0, 1); // Fond noir
 
 // Boucle de rendu
 engine.runRenderLoop(() => {
